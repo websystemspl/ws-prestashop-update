@@ -129,6 +129,66 @@ trait WsLicenseTrait
     }
 
     /**
+     * Returns an admin notification banner HTML if a newer version is available.
+     * Reads ONLY from the local Configuration cache — no HTTP request is made.
+     * Returns an empty string when up to date or when the client is unavailable.
+     *
+     * Usage in the module class:
+     *   public function hookDisplayBackOfficeHeader(): string
+     *   {
+     *       $tabUrl = $this->context->link->getAdminLink('AdminWsMyModule') . '&ws_tab=license';
+     *       return $this->wsRenderUpdateNotification($tabUrl);
+     *   }
+     *
+     * @param string $tabUrl URL of the license/update admin tab
+     */
+    public function wsRenderUpdateNotification(string $tabUrl): string
+    {
+        if ($this->wsUpdateClient === null) {
+            return '';
+        }
+
+        // Use cached data only — no remote call
+        $info          = $this->wsUpdateClient->checkForUpdates(false);
+        $latestVersion = $info['version'] ?? null;
+
+        if (!$latestVersion) {
+            return '';
+        }
+
+        if (!version_compare($latestVersion, $this->wsUpdateClient->getCurrentVersion(), '>')) {
+            return '';
+        }
+
+        $moduleName    = htmlspecialchars($this->wsGetModuleName(), ENT_QUOTES, 'UTF-8');
+        $latestSafe    = htmlspecialchars($latestVersion, ENT_QUOTES, 'UTF-8');
+        $tabUrlSafe    = htmlspecialchars($tabUrl, ENT_QUOTES, 'UTF-8');
+        $msgUpdate     = htmlspecialchars(
+            Translations::trans('Update available!', $this->wsLocale),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+        $msgNew        = htmlspecialchars(
+            Translations::trans('New version available: %s', $this->wsLocale, [$latestVersion]),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+        $msgInstall    = htmlspecialchars(
+            Translations::trans('Install update', $this->wsLocale),
+            ENT_QUOTES,
+            'UTF-8'
+        );
+
+        return '<div class="alert alert-warning" style="margin:10px 20px;padding:10px 16px">'
+            . '<strong>' . $msgUpdate . '</strong>'
+            . ' &mdash; <em>' . $moduleName . '</em>: ' . $msgNew
+            . ' &nbsp;<a href="' . $tabUrlSafe . '" class="btn btn-sm btn-warning" style="margin-left:8px">'
+            . '<i class="icon-upload"></i> ' . $msgInstall
+            . '</a>'
+            . '</div>' . "\n";
+    }
+
+    /**
      * Returns accumulated error messages (after wsHandleLicenseActions).
      *
      * @return string[]
