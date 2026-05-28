@@ -148,7 +148,7 @@ src/
   License/
     LicenseTabRenderer.php    ← generator HTML zakładki "Licencja i aktualizacje"
   Traits/
-    WsLicenseTrait.php        ← trait do wklejenia w AdminController
+    WsLicenseTrait.php        ← trait do wklejenia w AdminController (zakładka licencji)
   Translations.php            ← tłumaczenia PL/EN (tablice statyczne)
 ```
 

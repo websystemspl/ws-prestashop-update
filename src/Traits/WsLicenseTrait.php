@@ -284,8 +284,32 @@ trait WsLicenseTrait
             return;
         }
 
-        // Best-effort cache clear — methods differ across PS versions
-        if (method_exists('Tools', 'clearAllCache')) {
+        $moduleName  = $this->wsGetModuleName();
+        $newVersion  = $info['version'];
+
+        // ── Run PrestaShop upgrade scripts (upgrade/upgrade-x.x.x.php) ──────
+        // upgradeModuleVersion() reads the upgrade/ directory and runs all
+        // scripts whose version is > current DB version, exactly like the
+        // PS back-office module manager does.
+        if (method_exists('\Module', 'upgradeModuleVersion')) {
+            \Module::upgradeModuleVersion($moduleName, $newVersion);
+        }
+
+        // Re-load the module instance from disk (new files are now in place)
+        // so that re-hook registration uses the updated class.
+        $moduleInstance = \Module::getInstanceByName($moduleName);
+
+        // ── Fire actionModuleUpgradeAfter so WsModuleTrait (and anything else
+        // listening) can re-register hooks, etc. ────────────────────────────
+        if ($moduleInstance instanceof \Module) {
+            \Hook::exec('actionModuleUpgradeAfter', [
+                'object'  => $moduleInstance,
+                'version' => $newVersion,
+            ]);
+        }
+
+        // ── Best-effort cache clear ──────────────────────────────────────────
+        if (method_exists('\Tools', 'clearAllCache')) {
             \Tools::clearAllCache();
         }
 
@@ -296,15 +320,15 @@ trait WsLicenseTrait
         \PrestaShopLogger::addLog(
             sprintf(
                 'WsUpdatePackage: module "%s" updated to version %s',
-                $this->wsGetModuleName(),
-                $info['version']
+                $moduleName,
+                $newVersion
             ),
             1
         );
 
         $this->wsLicenseConfirmations[] = $this->wsT(
             'Module successfully updated to version %s. Please refresh the page.',
-            [htmlspecialchars($info['version'], ENT_QUOTES, 'UTF-8')]
+            [htmlspecialchars($newVersion, ENT_QUOTES, 'UTF-8')]
         );
     }
 
