@@ -284,23 +284,56 @@ trait WsLicenseTrait
             return;
         }
 
-        $moduleName  = $this->wsGetModuleName();
-        $newVersion  = $info['version'];
+        $moduleName = $this->wsGetModuleName();
+        $newVersion = (string) $info['version'];
 
-        // ── Run PrestaShop upgrade scripts (upgrade/upgrade-x.x.x.php) ──────
-        // upgradeModuleVersion() reads the upgrade/ directory and runs all
-        // scripts whose version is > current DB version, exactly like the
-        // PS back-office module manager does.
-        if (method_exists('\Module', 'upgradeModuleVersion')) {
-            \Module::upgradeModuleVersion($moduleName, $newVersion);
+        // ── Update ps_module.version FIRST ────────────────────────────────────
+        // runUpgradeModule() compares ps_module.version (DB) with the version
+        // from the module class file. After extraction the class file has the
+        // new version, but PHP still holds the old class in memory.
+        // By writing $newVersion into the DB first, runUpgradeModule() will
+        // see "DB version == new file version" → nothing to do.
+        // So instead we manually include and run each upgrade script ourselves.
+        $upgradeDir = _PS_MODULE_DIR_ . $moduleName . '/upgrade/';
+
+        if (is_dir($upgradeDir)) {
+            $currentVersion = (string) \Db::getInstance()->getValue(
+                'SELECT version FROM `' . _DB_PREFIX_ . 'module` WHERE name = \'' . pSQL($moduleName) . '\''
+            );
+
+            $files = glob($upgradeDir . 'upgrade-*.php');
+            if (is_array($files)) {
+                natsort($files);
+                foreach ($files as $file) {
+                    // Extract version from filename: upgrade-1.2.3.php → 1.2.3
+                    if (!preg_match('/upgrade-([0-9]+(?:\.[0-9]+)*)\.php$/', basename($file), $m)) {
+                        continue;
+                    }
+                    $scriptVersion = $m[1];
+                    // Only run scripts newer than current DB version and up to (including) $newVersion
+                    if (version_compare($scriptVersion, $currentVersion, '>')
+                        && version_compare($scriptVersion, $newVersion, '<=')
+                    ) {
+                        include_once $file;
+                        $fnName = 'upgrade_module_' . str_replace('.', '_', $scriptVersion);
+                        if (function_exists($fnName)) {
+                            $moduleInstance = \Module::getInstanceByName($moduleName);
+                            $fnName($moduleInstance instanceof \Module ? $moduleInstance : $this);
+                        }
+                    }
+                }
+            }
         }
 
-        // Re-load the module instance from disk (new files are now in place)
-        // so that re-hook registration uses the updated class.
-        $moduleInstance = \Module::getInstanceByName($moduleName);
+        // ── Update version in DB ──────────────────────────────────────────────
+        \Db::getInstance()->update(
+            'module',
+            ['version' => pSQL($newVersion)],
+            'name = \'' . pSQL($moduleName) . '\''
+        );
 
-        // ── Fire actionModuleUpgradeAfter so WsModuleTrait (and anything else
-        // listening) can re-register hooks, etc. ────────────────────────────
+        // ── Fire actionModuleUpgradeAfter ─────────────────────────────────────
+        $moduleInstance = \Module::getInstanceByName($moduleName);
         if ($moduleInstance instanceof \Module) {
             \Hook::exec('actionModuleUpgradeAfter', [
                 'object'  => $moduleInstance,
