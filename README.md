@@ -4,6 +4,10 @@ Paczka Composer do zarządzania **licencjami** i **aktualizacjami** modułów Pr
 
 ---
 
+## Wersja 1.0.4
+
+---
+
 ## Wymagania
 
 - PHP >= 7.2
