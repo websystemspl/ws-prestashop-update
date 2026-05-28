@@ -1,5 +1,5 @@
 {
-    "name": "websystems/prestashop-update-package",
+    "name": "websystems/ws-prestashop-update-package",
     "description": "A Composer package for PrestaShop to manage module licensing and updates for Websystems package server.",
     "type": "library",
     "autoload": {
