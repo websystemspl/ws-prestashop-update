@@ -1,0 +1,18 @@
+{
+    "name": "websystems/prestashop-update-package",
+    "description": "A Composer package for PrestaShop to manage module licensing and updates for Websystems package server.",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Websystems\\PrestashopUpdatePackage\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Artur Ograbek",
+            "email": "a.ograbek@web-systems.pl"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {}
+}
