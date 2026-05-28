@@ -206,6 +206,22 @@ class UpdatePulseClient
     }
 
     /**
+     * Returns the raw cached update info from Configuration without any HTTP call
+     * and regardless of cache age. Returns null when no cache exists yet.
+     *
+     * Use this for passive notifications on every admin page load so that no
+     * remote request is triggered on page render.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCachedUpdateInfo(): ?array
+    {
+        $cached = \Configuration::get($this->cfgUpdateInfo);
+
+        return $cached ? json_decode($cached, true) : null;
+    }
+
+    /**
      * Returns true when a newer version is available on the server.
      */
     public function isUpdateAvailable(): bool

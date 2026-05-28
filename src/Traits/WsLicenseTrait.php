@@ -133,8 +133,11 @@ trait WsLicenseTrait
      * Reads ONLY from the local Configuration cache — no HTTP request is made.
      * Returns an empty string when up to date or when the client is unavailable.
      *
-     * Usage in the module class:
-     *   public function hookDisplayBackOfficeHeader(): string
+     * Call this from hookDisplayAdminAfterHeader so the banner appears inside
+     * #content on every admin page (same place as native PrestaShop alerts),
+     * not only on the module configuration page:
+     *
+     *   public function hookDisplayAdminAfterHeader(): string
      *   {
      *       $tabUrl = $this->context->link->getAdminLink('AdminWsMyModule') . '&ws_tab=license';
      *       return $this->wsRenderUpdateNotification($tabUrl);
@@ -148,7 +151,9 @@ trait WsLicenseTrait
             return '';
         }
 
-        // Use cached data only — no remote call
+        // checkForUpdates(false) uses a 24-hour cache for the HTTP request — it only
+        // contacts the server when the cache is stale. The notification itself is not
+        // time-gated: it renders on every page load whenever an update is available.
         $info          = $this->wsUpdateClient->checkForUpdates(false);
         $latestVersion = $info['version'] ?? null;
 
