@@ -4,10 +4,6 @@ Paczka Composer do zarządzania **licencjami** i **aktualizacjami** modułów Pr
 
 ---
 
-## Wersja 1.0.4
-
----
-
 ## Wymagania
 
 - PHP >= 7.2
@@ -204,5 +200,5 @@ $msg = Translations::trans('License activated successfully.', 'pl');
 ## Autor
 
 **Artur Ograbek** — [a.ograbek@web-systems.pl](mailto:a.ograbek@web-systems.pl)  
-Web Systems — [https://admin.k4.pl](https://admin.k4.pl)
+Web Systems — [https://www.web-systems.pl/](https://www.web-systems.pl/)
 
