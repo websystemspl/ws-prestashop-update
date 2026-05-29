@@ -55,6 +55,9 @@ class UpdatePulseClient
     /** @var string PrestaShop Configuration key — last check timestamp */
     private $cfgLastCheck;
 
+    /** @var bool Whether this package requires a license */
+    private $requireLicense;
+
     /**
      * @param \Module $module        The PrestaShop module instance.
      * @param string  $configPrefix  Prefix for Configuration keys, e.g. 'WS_MYMODULE'.
@@ -76,9 +79,18 @@ class UpdatePulseClient
         $this->serverUrl        = rtrim($config['server'], '/');
         $this->packageSlug      = $config['packageData']['Slug'] ?? $module->name;
         $this->currentVersion   = $config['packageData']['Version'];
+        $this->requireLicense   = (bool) ($config['packageData']['RequireLicense'] ?? true);
         $this->licenseKey       = (string) \Configuration::get($this->cfgLicenseKey);
         $this->licenseSignature = (string) \Configuration::get($this->cfgLicenseSig);
         $this->allowedDomain    = \Tools::getShopDomainSsl() ?: \Tools::getShopDomain();
+    }
+
+    /**
+     * Returns true when the package requires a license (RequireLicense in updatepulse.json).
+     */
+    public function requiresLicense(): bool
+    {
+        return $this->requireLicense;
     }
 
     // -------------------------------------------------------------------------
@@ -187,7 +199,7 @@ class UpdatePulseClient
             'update_type'       => 'Generic',
         ];
 
-        if ($this->licenseKey !== '') {
+        if ($this->requireLicense && $this->licenseKey !== '') {
             $args['license_key']       = $this->licenseKey;
             $args['license_signature'] = $this->licenseSignature;
         }

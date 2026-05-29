@@ -101,9 +101,13 @@ trait WsLicenseTrait
     public function wsHandleLicenseActions(): void
     {
         if (\Tools::isSubmit('submitWsLicenseActivate')) {
-            $this->wsHandleActivate();
+            if ($this->wsUpdateClient !== null && $this->wsUpdateClient->requiresLicense()) {
+                $this->wsHandleActivate();
+            }
         } elseif (\Tools::isSubmit('submitWsLicenseDeactivate')) {
-            $this->wsHandleDeactivate();
+            if ($this->wsUpdateClient !== null && $this->wsUpdateClient->requiresLicense()) {
+                $this->wsHandleDeactivate();
+            }
         } elseif (\Tools::isSubmit('submitWsCheckUpdate')) {
             $this->wsHandleCheckUpdate();
         } elseif (\Tools::isSubmit('submitWsInstallUpdate')) {

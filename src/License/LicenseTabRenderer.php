@@ -153,6 +153,10 @@ class LicenseTabRenderer
         $html .= '</div>' . "\n";   // .panel
 
         // ── LICENSE SECTION ───────────────────────────────────────────────────
+        if (!$this->client->requiresLicense()) {
+            return $html;
+        }
+
         $html .= '<div class="panel panel-default">' . "\n";
         $html .= '  <div class="panel-heading">'
             . '<i class="icon-key"></i> ' . $this->h('License')

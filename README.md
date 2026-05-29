@@ -211,6 +211,8 @@ Klucze są budowane automatycznie z przekazanego prefiksu (np. `WS_MYMODULE`):
 | `WS_MYMODULE_UPDATE_INFO` | JSON z metadanymi ostatniej odpowiedzi serwera |
 | `WS_MYMODULE_UPDATE_LAST_CHECK` | Timestamp ostatniego sprawdzenia aktualizacji |
 
+> **Uwaga:** Gdy `"RequireLicense": false` w `updatepulse.json`, sekcja licencji jest całkowicie ukryta w zakładce admina, a zapytanie o aktualizacje jest wysyłane bez parametrów licencyjnych.
+
 ---
 
 ## Struktura paczki
