@@ -81,6 +81,20 @@ trait WsLicenseTrait
     }
 
     /**
+     * Silently checks for updates using the 24-hour cache.
+     * Contacts the server only when the cache is stale; otherwise returns immediately.
+     * Does not render anything — safe to call from hookDisplayBackOfficeHeader.
+     */
+    public function wsCheckForUpdates(): void
+    {
+        if ($this->wsUpdateClient === null) {
+            return;
+        }
+
+        $this->wsUpdateClient->checkForUpdates(false);
+    }
+
+    /**
      * Dispatches submit actions from the license/update forms.
      * Call this in postProcess() (or equivalent) before rendering.
      */
@@ -184,7 +198,7 @@ trait WsLicenseTrait
             'UTF-8'
         );
 
-        return '<div class="alert alert-warning" style="margin:10px 20px;padding:10px 16px">'
+        return '<div class="alert alert-warning">'
             . '<strong>' . $msgUpdate . '</strong>'
             . ' &mdash; <em>' . $moduleName . '</em>: ' . $msgNew
             . ' &nbsp;<a href="' . $tabUrlSafe . '" class="btn btn-sm btn-warning" style="margin-left:8px">'

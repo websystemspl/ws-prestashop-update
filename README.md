@@ -96,6 +96,50 @@ class Ws_mymodule extends Module
 }
 ```
 
+#### Wariant z `hookDisplayBackOfficeHeader` — automatyczne sprawdzanie w tle
+
+Jeśli chcesz aby sprawdzanie aktualizacji odbywało się **automatycznie w tle** na każdej stronie admina (bez renderowania HTML), użyj `wsCheckForUpdates()`. Metoda odpytuje serwer max raz na 24 h — same zarządza cache w `Configuration`; nie musisz ręcznie porównywać timestampów ani zapisywać czasu ostatniego sprawdzenia.
+
+```php
+class Ws_mymodule extends Module
+{
+    use \Websystems\PrestashopUpdatePackage\Traits\WsLicenseTrait;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->wsInitUpdateManager($this, 'WS_MYMODULE');
+    }
+
+    public function install(): bool
+    {
+        return parent::install()
+            && $this->registerHook('displayBackOfficeHeader')
+            && $this->registerHook('displayAdminAfterHeader');
+            // ... pozostałe hooki
+    }
+
+    /**
+     * Sprawdza aktualizacje w tle — max raz na 24 h.
+     * Nie renderuje HTML. Odpowiednik ręcznego wzorca z Configuration::get/updateValue.
+     */
+    public function hookDisplayBackOfficeHeader(): void
+    {
+        $this->wsCheckForUpdates();
+    }
+
+    /**
+     * Renderuje baner gdy dostępna jest nowsza wersja.
+     * Dane są już w cache z hookDisplayBackOfficeHeader.
+     */
+    public function hookDisplayAdminAfterHeader(): string
+    {
+        $tabUrl = $this->context->link->getAdminLink('AdminWsMyModule') . '&ws_tab=license';
+        return $this->wsRenderUpdateNotification($tabUrl);
+    }
+}
+```
+
 ---
 
 ### 2. Zakładka „Licencja i aktualizacje" (kontroler admina)
